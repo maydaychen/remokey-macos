@@ -209,7 +209,7 @@ final class GUIAppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         services.health.onChange = { [weak self] state in
             DispatchQueue.main.async {
-                self?.model.degraded = state != .healthy
+                self?.model.healthState = state
             }
         }
         services.usageStatistics.onChange = { [weak self] in

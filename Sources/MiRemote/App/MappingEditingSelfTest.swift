@@ -79,6 +79,7 @@ enum MappingEditingSelfTest {
         gate.setActive(false)
 
         check(MainActor.assumeIsolated { saveFailureCheck() }, "保存失败回滚、重试和放弃")
+        check(MainActor.assumeIsolated { UIOptimizationSelfTest.run() }, "健康提示、配置导入恢复与电平节流")
         return passed
     }
 

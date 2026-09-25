@@ -288,15 +288,25 @@ final class LevelMeterSink: PCMSink, @unchecked Sendable {
     /// 每批样本的 RMS（0…1），在 ATVV 队列上回调，消费方自行切主线程。
     var onLevel: ((Float) -> Void)?
 
-    func streamStarted(sampleRate: Double) { onLevel?(0) }
+    private let now: () -> TimeInterval
+    private var lastEmission: TimeInterval?
+
+    init(now: @escaping () -> TimeInterval = { ProcessInfo.processInfo.systemUptime }) {
+        self.now = now
+    }
+
+    func streamStarted(sampleRate: Double) { lastEmission = nil; onLevel?(0) }
     func write(_ samples: [Int16]) {
         guard !samples.isEmpty else { return }
+        let time = now()
+        if let lastEmission, time - lastEmission < 0.05 { return }
+        lastEmission = time
         var acc = 0.0
         for s in samples { let d = Double(s); acc += d * d }
         let rms = (acc / Double(samples.count)).squareRoot() / 32768.0
         onLevel?(Float(min(1, rms)))
     }
-    func streamStopped() { onLevel?(0) }
+    func streamStopped() { lastEmission = nil; onLevel?(0) }
 }
 
 // MARK: - 语音链路（M1）

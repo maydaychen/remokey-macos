@@ -50,6 +50,7 @@ are two independent channels — perfect for a Mac to fully take over.
   widens the scope (current app → all apps), OK confirms, back closes.
 - **Self-healing health checks** — `--doctor` diagnoses and fixes common issues with
   permissions, BlackHole, and leftover key mappings in one shot.
+- **Configuration import** — preview profile replacement counts before importing JSON; undo the latest import during the current run, until another configuration save succeeds.
 - **Preset library** — built-in profiles for Ghostty / WeChat / browsers / video players,
   with an overlay-inheritance model, one-click import, and JSON export for sharing.
 - **Zero dependencies** — all native frameworks (CoreBluetooth / IOKit / CoreGraphics /

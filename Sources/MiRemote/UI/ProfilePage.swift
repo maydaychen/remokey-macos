@@ -84,6 +84,9 @@ struct ProfilePage: View {
         Button("导入预设") { showPresets = true }
         Button("导入 JSON 文件") { importJSON() }
         Button("导出 JSON") { exportJSON() }
+        if model.importUndoSnapshot != nil {
+            Button("撤销配置导入") { model.undoConfigImport() }
+        }
 
         if model.presetUndoSnapshot != nil {
             Button("撤销本次套用") { model.undoPresetApply() }
@@ -163,10 +166,18 @@ struct ProfilePage: View {
                 throw NSError(domain: "MiRemote", code: 1,
                               userInfo: [NSLocalizedDescriptionKey: "不支持配置版本 \(imported.version)，当前最高支持版本 \(MappingConfig.currentVersion)"])
             }
-            model.config = migrateConfigIfNeeded(imported)
-            if model.config.profiles["global"] == nil { model.config.profiles["global"] = [:] }
-            model.currentProfile = "global"
-            model.saveConfig()
+            var candidate = migrateConfigIfNeeded(imported)
+            if candidate.profiles["global"] == nil { candidate.profiles["global"] = [:] }
+            let preview = NSAlert()
+            preview.alertStyle = .warning
+            preview.messageText = "替换现有映射配置？"
+            let existing = Set(model.config.profiles.keys)
+            let incoming = Set(candidate.profiles.keys)
+            preview.informativeText = "当前 \(existing.count) 个场景，导入后 \(incoming.count) 个场景。\n替换 \(existing.intersection(incoming).count) 个，新增 \(incoming.subtracting(existing).count) 个，移除 \(existing.subtracting(incoming).count) 个。\n全部按键映射、语音规则和配置参数将被替换。导入后可撤销一次；再次保存配置后撤销失效。"
+            preview.addButton(withTitle: "取消")
+            preview.addButton(withTitle: "替换配置")
+            guard preview.runModal() == .alertSecondButtonReturn else { return }
+            model.importConfig(candidate)
         } catch {
             showError(title: "无法导入配置", message: error.localizedDescription)
         }

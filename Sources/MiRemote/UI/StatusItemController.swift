@@ -88,7 +88,11 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     /// 6 态：故障红 > 语音 > 鼠标 > 层 > 未连接（降透明度）> 空闲
     private func iconState() -> (tint: NSColor?, dimmed: Bool, desc: String) {
-        if model.degraded { return (.systemRed, false, "故障") }
+        switch model.healthState {
+        case .broken: return (.systemRed, false, "需处理")
+        case .degraded: return (.systemOrange, false, model.remoteSuspended ? "已暂停" : "需关注")
+        case .healthy: break
+        }
         if model.voiceActive { return (.controlAccentColor, false, "语音中") }
         if model.mouseModeActive { return (.systemGreen, false, "鼠标模式") }
         if model.activeLayer != 0 { return (.controlAccentColor, false, modeDisplayName(model.activeLayer)) }
@@ -99,7 +103,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// tooltip 与浮动角标同步的完整语义描述（P3/P9）。
     private func tooltipText() -> String {
         var parts: [String] = ["遥键"]
-        if model.degraded { parts.append("故障：按键通道异常，打开体检修复") }
+        if model.degraded { parts.append(model.healthMessage) }
         if model.voiceActive { parts.append("录音中") }
         if model.mouseModeActive { parts.append("鼠标模式") }
         if model.activeLayer != 0 {
@@ -277,9 +281,17 @@ struct StatusPanelView: View {
                 BatteryRingView(percent: pct)
             }
             Circle()
-                .fill(model.degraded ? Color.red : (model.connected ? Color.green : Color.secondary.opacity(0.4)))
+                .fill(healthColor)
                 .frame(width: 8, height: 8)
-                .help(model.degraded ? "按键通道异常" : (model.connected ? "运行正常" : "未连接"))
+                .help(model.degraded ? model.healthMessage : (model.connected ? "运行正常" : "未连接"))
+        }
+    }
+
+    private var healthColor: Color {
+        switch model.healthState {
+        case .broken: return .red
+        case .degraded: return .orange
+        case .healthy: return model.connected ? .green : .secondary.opacity(0.4)
         }
     }
 
@@ -330,10 +342,13 @@ final class FloatingBadgeController {
     /// 场景切换闪现（gamepad-ux C2：前台 App 变化致 per-app 覆盖生效时提示「XX 布局」）
     private var flashUntil: Date?
     private var lastProfileBundle: String?
+    private var displayedText: String?
 
     init(model: AppModel) {
         self.model = model
-        model.objectWillChange
+        Publishers.CombineLatest3(model.$activeLayer, model.$mouseModeActive, model.$voiceActive)
+            .map { "\($0)-\($1)-\($2)" }
+            .removeDuplicates()
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in self?.refresh() }
             .store(in: &cancellables)
@@ -352,7 +367,7 @@ final class FloatingBadgeController {
               bundleID != Bundle.main.bundleIdentifier else { return }
         let hasOverlay = model.config.profiles[bundleID] != nil
         defer { lastProfileBundle = hasOverlay ? bundleID : nil }
-        guard hasOverlay, bundleID != lastProfileBundle else { return }
+        guard hasOverlay, bundleID != lastProfileBundle else { refresh(); return }
         flash(text: "\(app.localizedName ?? bundleID) 布局")
     }
 
@@ -385,6 +400,8 @@ final class FloatingBadgeController {
     }
 
     private func show(text: String) {
+        guard displayedText != text || panel?.isVisible != true else { return }
+        displayedText = text
         let content = NSHostingView(rootView:
             Text(text)
                 .font(.callout.weight(.semibold))
@@ -429,6 +446,7 @@ final class FloatingBadgeController {
     }
 
     private func hide() {
+        displayedText = nil
         guard let panel, panel.isVisible else { return }
         // 退出模式：淡出后收起
         NSAnimationContext.runAnimationGroup({ ctx in

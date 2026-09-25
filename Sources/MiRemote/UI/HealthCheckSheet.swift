@@ -147,9 +147,15 @@ struct HealthCheckSheet: View {
                 guard let model, let services = model.services, services.started else {
                     return (.warn, "引擎未运行（预览模式）", nil, nil)
                 }
-                return model.degraded
-                    ? (.bad, "按键注入通道已断开", "重建通道", { services.reinstallMapping() })
-                    : (.ok, "", nil, nil)
+                let sources = services.health.sourcesSnapshot
+                if sources.suspended { return (.ok, "已主动暂停，恢复遥控后启用", nil, nil) }
+                if !sources.keysEnabled { return (.ok, "当前未启用按键映射", nil, nil) }
+                if sources.mappingQueryFailed {
+                    return (.warn, "映射状态暂无法确认，请连接遥控器后重新体检", nil, nil)
+                }
+                return sources.tapAlive && sources.mappingInstalled
+                    ? (.ok, "", nil, nil)
+                    : (.bad, "按键通道或映射未就绪", "重建通道", { services.reinstallMapping() })
             }),
             ("config", { [weak model] in
                 guard let model else { return (.warn, "", nil, nil) }

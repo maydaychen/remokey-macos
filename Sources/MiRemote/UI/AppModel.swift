@@ -262,7 +262,14 @@ final class AppModel: ObservableObject {
     @Published var voiceActive = false
     @Published var batteryPercent: Int?
     @Published var mouseModeActive = false
-    @Published var degraded = false          // tap 失效等故障态
+    @Published var healthState: HealthState = .healthy
+    var degraded: Bool { healthState != .healthy }
+    var healthMessage: String {
+        switch healthState {
+        case .healthy: return "运行正常"
+        case .degraded(let reasons), .broken(let reasons): return reasons.joined(separator: "；")
+        }
+    }
     @Published var levelBars: [Float] = Array(repeating: 0, count: 12)
     @Published var usageSnapshot: UsageSnapshot = .empty
     @Published var testToneStatus: TestToneStatus = .idle
@@ -275,6 +282,8 @@ final class AppModel: ObservableObject {
     @Published var configSaveError: String?
     private var savedConfig: MappingConfig?
     private var pendingConfig: MappingConfig?
+    @Published private(set) var importUndoSnapshot: MappingConfig?
+    private var pendingImportUndo: MappingConfig?
 
     // App 级偏好（UserDefaults）
     @Published var voiceMode: VoiceMode { didSet { prefsChanged() } }
@@ -454,7 +463,8 @@ final class AppModel: ObservableObject {
     }
 
     /// 写回 config.json → 引擎热加载 → inline「已保存」提示。
-    @discardableResult func saveConfig() -> Bool {
+    @discardableResult func saveConfig(previousForImport: MappingConfig? = nil) -> Bool {
+        pendingImportUndo = previousForImport
         let candidate = config
         guard ConfigStore.save(candidate, to: configURL) else {
             pendingConfig = candidate
@@ -464,6 +474,9 @@ final class AppModel: ObservableObject {
             return false
         }
         savedConfig = candidate
+        if config.profiles[currentProfile] == nil { currentProfile = "global" }
+        importUndoSnapshot = pendingImportUndo
+        pendingImportUndo = nil
         pendingConfig = nil
         configSaveError = nil
         services?.applyConfig(candidate)
@@ -474,12 +487,28 @@ final class AppModel: ObservableObject {
     func retryConfigSave() {
         guard let pendingConfig else { return }
         config = pendingConfig
-        saveConfig()
+        saveConfig(previousForImport: pendingImportUndo)
     }
 
     func discardPendingConfig() {
+        pendingImportUndo = nil
         pendingConfig = nil
         configSaveError = nil
+    }
+
+    /// 已确认的导入；保存失败时保留恢复快照，重试成功后仍可撤销。
+    @discardableResult func importConfig(_ imported: MappingConfig) -> Bool {
+        let previous = config
+        config = imported
+        currentProfile = "global"
+        presetUndoSnapshot = nil
+        return saveConfig(previousForImport: previous)
+    }
+
+    @discardableResult func undoConfigImport() -> Bool {
+        guard let previous = importUndoSnapshot else { return false }
+        config = previous
+        return saveConfig()
     }
 
     // MARK: 预设
