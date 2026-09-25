@@ -146,6 +146,7 @@ final class MappingEngine: @unchecked Sendable {
             // 暂停即回到干净基态：锁定层一并清除（_resetInputState 只清瞬时层），
             // 恢复后从基础层开始，不残留看不见的模式态；鼠标模式一并退出。
             if suspended {
+                MacroEngine.shared.cancel()
                 self.lockedLayer = 0
                 self.invalidateLockedLayerIdleTimer()
                 MouseMode.shared.deactivate()

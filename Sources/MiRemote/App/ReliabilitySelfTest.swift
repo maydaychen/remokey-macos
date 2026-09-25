@@ -75,7 +75,7 @@ enum ReliabilitySelfTest {
         } catch {
             check(false, "隔离统计测试失败：\(error)")
         }
-        return passed
+        return SessionLifecycleSelfTest.run() && passed
     }
 
     private static func checkStatistics(in dir: URL, check: (Bool, String) -> Void) throws {

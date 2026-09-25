@@ -405,8 +405,6 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
         audioActivity.beginRemoteVoice()
         log("语音开始")
         onVoiceActive?(true)
-        restoreWork?.cancel()
-        restoreWork = nil
         // 会话锁存：本会话按此刻的配置执行并记录实际做过的操作，
         // 结束/stop 只按锁存值对称回滚（会话中途改配置不影响本会话清理）。
         let (wantSwitch, wantDoubao, sessionGainDB): (Bool, Bool, Double) = {
@@ -432,7 +430,6 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
         sink.streamStarted(sampleRate: 16000)
     }
 
-    private var restoreWork: DispatchWorkItem?
     private var pendingMicSwitch = false
     private var pendingTrigger = false
     private var triggered = false
@@ -453,16 +450,8 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
             return r
         }()
         if didDoubao && didTrigger { VoiceTrigger.end() } // 只有真正触发过才停
-        if didSwitch {
-            // 延迟还原麦克风：给识别收尾留 1.2s，期间听到的是 BlackHole 静音而非环境音
-            let restore = restoreInput
-            let work = DispatchWorkItem {
-                restore()
-                log("默认麦克风已还原")
-            }
-            restoreWork = work
-            DispatchQueue.global().asyncAfter(deadline: .now() + 1.2, execute: work)
-        }
+        // 零帧会话也继承并释放上一段的恢复责任；定时器由共享路由队列统一作废。
+        audioActivity.scheduleInputRestore(didSwitch ? restoreInput : nil)
         audio.streamStopped()
         sink.streamStopped()
         usageStatistics?.endVoiceSession(sessionID)
@@ -473,9 +462,6 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
     ///（松开触发键、还原默认麦克风），防止 stop 后修饰键粘住/麦克风停在 BlackHole。
     func forceEndSessionIfActive() {
         defer { KeyLearningGate.shared.endVoice() }
-        let hadPendingMicRestore = restoreWork != nil
-        restoreWork?.cancel()
-        restoreWork = nil
         pendingMicSwitch = false
         pendingTrigger = false
         let (active, didSwitch): (Bool, Bool) = {
@@ -495,9 +481,7 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
         // 即使 ATVV 已先发 VoiceStopped，普通 end 仍可能在等待最短按住/去抖；
         // 服务停止必须无条件取消延迟并同步补 keyUp/恢复输入法。
         VoiceTrigger.shutdown()
-        if didSwitch || hadPendingMicRestore {
-            restoreInput()
-        }
+        audioActivity.restoreInputNow(didSwitch ? restoreInput : nil)
         usageStatistics?.endVoiceSession(sessionID)
         audioActivity.endRemoteVoice()
     }
@@ -542,7 +526,7 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
         pendingTrigger = false
         audio.stopImmediately()
         // 也还原上一段会话被本次 START 取消的延迟恢复。
-        restoreInput()
+        audioActivity.restoreInputNow(restoreInput)
         cfgLock.withLock { sessionSwitchedMic = false }
         onVoiceActive?(false)
         log("语音失败：\(message)")
@@ -901,6 +885,7 @@ final class AppServices {
     func stop() {
         guard started else { return }
         started = false
+        MacroEngine.shared.cancel()
         eventListener.stop()
         health.stop()
         // 先同步排空 ATVV 队列，再从生命周期线程收尾 VoiceBridgeApp；否则首帧回调

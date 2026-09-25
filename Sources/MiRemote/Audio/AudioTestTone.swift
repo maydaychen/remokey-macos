@@ -51,10 +51,15 @@ final class AudioActivityCoordinator: @unchecked Sendable {
     private let lock = NSLock()
     private var state: AudioActivity = .idle
     private var cancelTest: (() -> Void)?
+    private let inputQueue = DispatchQueue(label: "com.miremote.input-restore")
+    private var inputGeneration = 0
+    private var pendingInputRestore: (() -> Void)?
 
     func beginTest(cancel: @escaping () -> Void) -> Bool {
         lock.lock(); defer { lock.unlock() }
         guard state == .idle else { return false }
+        // 先结束旧语音的恢复责任，测试音再接管输入，旧定时器不得跨会话执行。
+        restoreInputNow()
         state = .testTone
         cancelTest = cancel
         return true
@@ -69,6 +74,31 @@ final class AudioActivityCoordinator: @unchecked Sendable {
             return c
         }()
         cancel?()
+        inputQueue.sync { inputGeneration += 1 } // 暂停旧恢复，但保留恢复责任供零帧会话继承。
+    }
+
+    func scheduleInputRestore(_ restore: (() -> Void)?, delay: TimeInterval = 1.2) {
+        inputQueue.sync {
+            if let restore { pendingInputRestore = restore }
+            inputGeneration += 1
+            let generation = inputGeneration
+            guard pendingInputRestore != nil else { return }
+            inputQueue.asyncAfter(deadline: .now() + delay) { [self] in
+                guard generation == inputGeneration else { return }
+                let work = pendingInputRestore
+                pendingInputRestore = nil
+                work?()
+            }
+        }
+    }
+
+    func restoreInputNow(_ restore: (() -> Void)? = nil) {
+        inputQueue.sync {
+            inputGeneration += 1
+            let work = restore ?? pendingInputRestore
+            pendingInputRestore = nil
+            work?()
+        }
     }
 
     func endTest() {
