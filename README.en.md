@@ -60,9 +60,9 @@ Choose a global voice-tool preset on the Voice page to save its trigger key, tri
 
 The Typeless preset follows its [official Dictate guide](https://www.typeless.com/help/quickstart/dictate). The Bageshuo preset uses this project's existing compatible configuration. Applying a preset does not modify third-party tool settings.
 
-## Supported apps and tools
+## App key presets and voice-tool integration
 
-“Built-in preset” means RemoKey ships ready-to-use bindings for that app. “Generic integration” means RemoKey provides the control or audio path, while you choose a shortcut or microphone in the target app. Other top-level macOS apps can be added from the running-app list and mapped manually.
+App key presets control the target app; voice tools recognize speech and insert text. These are independent. The lists below describe the configurations provided by the project, not a claim that every tool and version has passed real-world acceptance testing.
 
 ### Built-in app presets
 
@@ -85,14 +85,23 @@ The Typeless preset follows its [official Dictate guide](https://www.typeless.co
 
 Web content such as YouTube uses the Chrome or Safari preset. RemoKey does not currently switch profiles by website.
 
-### Generic AI and voice integrations
+### One-click voice-tool presets
 
-| Type | Supported tools / scenarios | Integration |
+| Tool | Configuration applied in RemoKey | Basis and requirements |
 | --- | --- | --- |
-| AI CLI | Codex CLI, Claude Code, Gemini CLI, aider, opencode | App control mode provides option navigation, confirm, reject / interrupt, automatic-mode switching, and tab switching in terminals such as Ghostty, Terminal, and iTerm2 |
-| Standalone voice app | NetEase Bageshuo | Standalone voice-app mode sends the configured trigger and routes remote audio through BlackHole without switching input methods |
-| Input-method voice | Doubao Input Method | RemoKey can switch to Doubao when voice starts and send its trigger key |
-| Custom-microphone voice tools | Typeless, superwhisper, and other tools that accept a microphone or voice shortcut | Select BlackHole in the tool, or let it follow the system default input; configure the trigger per app |
+| NetEase Bageshuo | `Fn + tap`, no input-method switch | Uses the project's existing configuration; Bageshuo must use Fn to start and stop dictation |
+| Typeless | `Fn + tap`, no input-method switch | Based on the [official Dictate guide](https://www.typeless.com/help/quickstart/dictate); match any customized shortcut |
+| Doubao Input Method | Right Option in hold mode, automatic input-method switch | Configure the same key and trigger mode in Doubao |
+
+These are the only three one-click voice presets currently provided. Applying one saves RemoKey's trigger settings without modifying the third-party tool. Automated checks cover configuration persistence, switching, and per-app inheritance. End-to-end remote-microphone-to-text acceptance has not been completed for all three tools; preset availability is not full compatibility certification.
+
+### Custom voice-tool integration
+
+Other tools, such as superwhisper, can be configured through Custom settings. They must accept a matching trigger shortcut and, for the remote microphone, BlackHole audio input. These tools have no one-click preset and have not completed compatibility acceptance. Microphone selection alone does not establish a working end-to-end voice path.
+
+### Generic AI CLI key mappings
+
+Codex CLI, Claude Code, Gemini CLI, aider, and opencode can use the generic App control mode to send option navigation, confirmation, rejection / interruption, and tab-switching shortcuts. This is terminal keyboard control, not speech recognition or API integration; behavior depends on the target CLI and terminal shortcut settings.
 
 The running-app picker accepts regular window apps and top-level menu-bar / accessory apps while excluding internal WebKit, GPU, and Networking helpers. Generic integration does not mean every third-party release has been validated on hardware; use the shortcut settings provided by the installed app version when they differ.
 
