@@ -56,6 +56,42 @@ are two independent channels — perfect for a Mac to fully take over.
 - **Zero dependencies** — all native frameworks (CoreBluetooth / IOKit / CoreGraphics /
   AVFoundation / SwiftUI); no third-party packages.
 
+## Supported apps and tools
+
+“Built-in preset” means RemoKey ships ready-to-use bindings for that app. “Generic integration” means RemoKey provides the control or audio path, while you choose a shortcut or microphone in the target app. Other top-level macOS apps can be added from the running-app list and mapped manually.
+
+### Built-in app presets
+
+| Category | App | Bundle ID | Main bindings |
+| --- | --- | --- | --- |
+| AI / terminal | Ghostty | `com.mitchellh.ghostty` | Codex / Claude Code selection, confirm, interrupt, clear line, and tab switching |
+| AI desktop | Codex | `com.openai.codex` | Task tabs, selection, confirm, back, and focus input |
+| AI desktop | ChatGPT | `com.openai.chat` | Send, stop generation, search / history, and focus input |
+| AI desktop | Claude | `com.anthropic.claudefordesktop` | Tab switching, selection, confirm, back, and focus input |
+| Browser | Google Chrome | `com.google.Chrome` | Tab switching, paging, back, address bar, and search |
+| Browser | Safari | `com.apple.Safari` | Tab switching, paging, back, address bar, and search |
+| Messaging | WeChat | `com.tencent.xinWeChat` | Conversation navigation, send, next unread, and search; File Transfer macro needs device validation |
+| Messaging / meeting | Feishu | `com.electron.lark` | `⌘+Enter` send, search, and tabs; meeting mute shortcut needs device validation |
+| Video | IINA | `com.colliderli.iina` | Play / pause, seek, full screen, and subtitles |
+| Video | VLC | `org.videolan.vlc` | Play / pause, seek, full screen, and subtitle track |
+| Presentation | Keynote | `com.apple.iWork.Keynote` | Previous / next slide, start presentation, and black screen |
+| Presentation | Microsoft PowerPoint | `com.microsoft.Powerpoint` | Previous / next slide, start presentation, and black screen |
+| Meeting | Zoom | `us.zoom.xos` | Microphone mute / unmute and camera toggle |
+| Meeting | Tencent Meeting | `com.tencent.meeting` | Microphone mute; confirm the shortcut against the installed app version |
+
+Web content such as YouTube uses the Chrome or Safari preset. RemoKey does not currently switch profiles by website.
+
+### Generic AI and voice integrations
+
+| Type | Supported tools / scenarios | Integration |
+| --- | --- | --- |
+| AI CLI | Codex CLI, Claude Code, Gemini CLI, aider, opencode | App control mode provides option navigation, confirm, reject / interrupt, automatic-mode switching, and tab switching in terminals such as Ghostty, Terminal, and iTerm2 |
+| Standalone voice app | NetEase Bageshuo | Standalone voice-app mode sends the configured trigger and routes remote audio through BlackHole without switching input methods |
+| Input-method voice | Doubao Input Method | RemoKey can switch to Doubao when voice starts and send its trigger key |
+| Custom-microphone voice tools | Typeless, superwhisper, and other tools that accept a microphone or voice shortcut | Select BlackHole in the tool, or let it follow the system default input; configure the trigger per app |
+
+The running-app picker accepts regular window apps and top-level menu-bar / accessory apps while excluding internal WebKit, GPU, and Networking helpers. Generic integration does not mean every third-party release has been validated on hardware; use the shortcut settings provided by the installed app version when they differ.
+
 ## Architecture at a glance
 
 ```

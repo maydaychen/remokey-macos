@@ -49,6 +49,42 @@
 - **安全退出与自愈**：退出时清除本程序安装的 `hidutil` 映射；`--doctor` 检查权限、BlackHole、遥控器和残留映射。
 - **原生 Swift 6**：运行时只使用 macOS 系统框架，不引入第三方软件包。
 
+## App 与工具适配列表
+
+“内置预设”表示首次使用即可获得对应键位；“通用接入”表示遥键提供控制或音频链路，需要在目标 App 中选择快捷键或麦克风。未列出的顶层 macOS App 也可以从运行列表加入场景，再自行配置按键。
+
+### 内置 App 键位预设
+
+| 类别 | App | Bundle ID | 主要适配 |
+| --- | --- | --- | --- |
+| AI／终端 | Ghostty | `com.mitchellh.ghostty` | Codex／Claude Code 选项确认、中断、清行和标签切换 |
+| AI 桌面端 | Codex | `com.openai.codex` | 任务标签切换、选项确认、返回和聚焦输入框 |
+| AI 桌面端 | ChatGPT | `com.openai.chat` | 发送、停止生成、搜索／历史和聚焦输入框 |
+| AI 桌面端 | Claude | `com.anthropic.claudefordesktop` | 标签切换、选项确认、返回和聚焦输入框 |
+| 浏览器 | Google Chrome | `com.google.Chrome` | 标签切换、翻页、后退、地址栏和搜索 |
+| 浏览器 | Safari | `com.apple.Safari` | 标签切换、翻页、后退、地址栏和搜索 |
+| 通讯 | 微信 | `com.tencent.xinWeChat` | 会话浏览、发送、下一个未读、搜索；文件传输助手宏待真机确认 |
+| 通讯／会议 | 飞书 | `com.electron.lark` | `⌘+Enter` 发送、搜索、标签切换；会议静音快捷键待真机确认 |
+| 视频 | IINA | `com.colliderli.iina` | 播放／暂停、快退／快进、全屏和字幕 |
+| 视频 | VLC | `org.videolan.vlc` | 播放／暂停、快退／快进、全屏和字幕切轨 |
+| 演示 | Keynote | `com.apple.iWork.Keynote` | 上一页／下一页、开始放映和黑屏 |
+| 演示 | Microsoft PowerPoint | `com.microsoft.Powerpoint` | 上一页／下一页、开始放映和黑屏 |
+| 会议 | Zoom | `us.zoom.xos` | 麦克风静音／取消和摄像头开关 |
+| 会议 | 腾讯会议 | `com.tencent.meeting` | 麦克风静音；快捷键待目标版本真机确认 |
+
+YouTube 等网页内容沿用 Chrome 或 Safari 预设；当前不会按具体网站自动切换配置。
+
+### 通用 AI 与语音工具
+
+| 类型 | 已适配工具／场景 | 接入方式 |
+| --- | --- | --- |
+| AI CLI | Codex CLI、Claude Code、Gemini CLI、aider、opencode | App 控制模式提供选项移动、确认、拒绝／中断、自动模式和标签切换；可在 Ghostty、Terminal、iTerm2 等终端中使用 |
+| 独立语音 App | 网易叭哥说 | 使用独立语音 App 模式，遥键发送触发快捷键并通过 BlackHole 提供遥控器音频，无需切换输入法 |
+| 输入法语音 | 豆包输入法 | 可在语音开始时自动切换到豆包输入法并发送触发键 |
+| 自定义麦克风语音工具 | Typeless、superwhisper 及其他支持选择麦克风或语音快捷键的工具 | 在工具中固定选择 BlackHole，或让工具跟随系统默认输入；触发键可按 App 配置 |
+
+运行 App 选择器支持普通窗口 App 和顶层菜单栏／辅助 App，并会排除 App 内部的 WebKit、GPU、Networking 等辅助进程。通用接入能力不代表所有第三方版本都经过真机验证；涉及快捷键差异时，以目标 App 当前版本的快捷键设置为准。
+
 ## 真实界面
 
 <p align="center">
