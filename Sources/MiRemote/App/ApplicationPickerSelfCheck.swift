@@ -2,6 +2,12 @@ import AppKit
 import Foundation
 
 func applicationPickerSelfCheck(expect: (Bool, String, String) -> Void) {
+    expect(profileFallbackName("com.openai.chat") == "ChatGPT 桌面版"
+           && profileFallbackName("org.videolan.vlc") == "VLC 播放器"
+           && profileFallbackName("us.zoom.xos") == "Zoom 会议",
+           "未安装 App 使用内置预设名称", "")
+    expect(profileFallbackName("com.example.custom") == "com.example.custom",
+           "未知自定义 App 保留包名", "")
     let bageshuo = URL(fileURLWithPath: "/Applications/网易叭哥说.app")
     let helper = URL(fileURLWithPath: "/Applications/网易叭哥说.app/Contents/Frameworks/WebKit Helper.app")
     expect(shouldListRunningApplication(bundleIdentifier: "com.bageshuo",

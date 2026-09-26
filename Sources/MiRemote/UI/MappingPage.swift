@@ -258,7 +258,11 @@ func profileDisplayName(_ bundleID: String) -> String {
     if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
         return FileManager.default.displayName(atPath: url.path)
     }
-    return bundleID
+    return profileFallbackName(bundleID)
+}
+
+func profileFallbackName(_ bundleID: String) -> String {
+    Presets.all.first(where: { $0.bundleID == bundleID })?.displayName ?? bundleID
 }
 
 // MARK: - 识别按键 sheet（学习模式：显示下一个按下的遥控键）
