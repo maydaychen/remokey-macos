@@ -11,27 +11,11 @@ func currentInputSourceID() -> String? {
 @MainActor
 struct VoicePage: View {
     @EnvironmentObject var model: AppModel
-    @State private var selectedProfile = "global"
-    @State private var showAddApp = false
     // 链路自检状态（N-17：跨 3 个 App 的语音链路逐项亮灯）
     @State private var hadAudioFrames = false
     @State private var imeIsDoubao = false
     @State private var remoteSeen = false
     @State private var checkTimer: Timer?
-
-    private let triggerKeys: [(String, String)] = [
-        ("right_option", "右 Option ⌥（推荐）"), ("left_option", "左 Option ⌥"),
-        ("f13", "F13（Typeless / Superwhisper 常用）"), ("f5", "F5"), ("fn", "Fn"),
-        ("right_cmd", "右 Command ⌘"), ("left_cmd", "左 Command ⌘"),
-        ("right_ctrl", "右 Control ⌃"), ("left_ctrl", "左 Control ⌃"),
-        ("right_shift", "右 Shift ⇧"), ("left_shift", "左 Shift ⇧"),
-    ]
-
-    private var selectableProfiles: [String] {
-        ["global"] + model.config.profiles.keys.filter { $0 != "global" }.sorted {
-            profileDisplayName($0) < profileDisplayName($1)
-        }
-    }
 
     private var blackHoleInstalled: Bool {
         EnvironmentCheck.blackHole().state == .granted
@@ -40,7 +24,7 @@ struct VoicePage: View {
     var body: some View {
         SettingsPageLayout {
             PageHeader(title: "语音",
-                       subtitle: "选择音频来源，并为不同 App 自动发送各自的语音输入快捷键。")
+                       subtitle: "选择语音工具，自动套用触发配置；App 专属设置在「场景配置」中管理。")
         } content: {
             VStack(alignment: .leading, spacing: Spacing.section) {
                 if model.voiceMode == .remoteMic && !blackHoleInstalled {
@@ -54,7 +38,7 @@ struct VoicePage: View {
                             subtitle: "按住语音键说话，音频经蓝牙传回并解码为 16kHz PCM")
                     RowDivider()
                     modeRow(.macMic, title: "Mac 内置麦克风",
-                            subtitle: "按键仅触发豆包语音输入，用 Mac 麦克风收音")
+                            subtitle: "按键触发所选语音工具，用 Mac 麦克风收音")
                     RowDivider()
                     modeRow(.off, title: "关闭",
                             subtitle: "语音键可另行映射为普通按键")
@@ -92,78 +76,9 @@ struct VoicePage: View {
                     .padding(Spacing.cardPadding)
                 }
 
-                SettingsGroup(title: "按 App 的语音快捷键") {
-                    VStack(alignment: .leading, spacing: 12) {
-                        // 三列稳定网格：标签 / 控件（等宽 250）/ 附件位，右缘对齐如系统 Form
-                        Grid(alignment: .leading, horizontalSpacing: Spacing.intra, verticalSpacing: 12) {
-                            GridRow {
-                                Text("适用 App").font(.body)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Picker("", selection: $selectedProfile) {
-                                    ForEach(selectableProfiles, id: \.self) { profile in
-                                        Text(profileDisplayName(profile)).tag(profile)
-                                    }
-                                }
-                                .labelsHidden()
-                                .frame(width: 250, alignment: .leading)
-                                Button { showAddApp = true } label: {
-                                    Image(systemName: "plus")
-                                }
-                                .buttonStyle(.borderless)
-                                .help("从运行中的 App 添加")
-                            }
-                            GridRow {
-                                Text("触发按键").font(.body)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Picker("", selection: triggerKeyBinding) {
-                                    ForEach(triggerKeys, id: \.0) { item in Text(item.1).tag(item.0) }
-                                }
-                                .labelsHidden()
-                                .frame(width: 250, alignment: .leading)
-                                Color.clear.frame(width: 16, height: 1)
-                            }
-                            GridRow {
-                                Text("触发方式").font(.body)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Picker("", selection: triggerModeBinding) {
-                                    Text("按住说话").tag("hold")
-                                    Text("单击开始 / 再击结束").tag("tap")
-                                    Text("双击开始 / 单击结束").tag("double")
-                                }
-                                .labelsHidden()
-                                .frame(width: 250, alignment: .leading)
-                                Color.clear.frame(width: 16, height: 1)
-                            }
-                            GridRow {
-                                Text("语音工具").font(.body)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                Picker("", selection: imeModeBinding) {
-                                    Text("豆包输入法（自动切换）").tag("doubao")
-                                    Text("网易叭哥说／独立语音 App").tag("standalone")
-                                }
-                                .labelsHidden()
-                                .frame(width: 250, alignment: .leading)
-                                Color.clear.frame(width: 16, height: 1)
-                            }
-                        }
-                        if selectedProfile != "global" {
-                            HStack {
-                                Text(model.hasCustomVoiceRule(for: selectedProfile)
-                                     ? "此 App 使用独立设置" : "此 App 正在继承全局设置")
-                                    .font(.caption).foregroundStyle(.secondary)
-                                Spacer()
-                                if model.hasCustomVoiceRule(for: selectedProfile) {
-                                    Button("恢复继承全局") {
-                                        model.resetVoiceRuleToGlobal(for: selectedProfile)
-                                    }
-                                    .controlSize(.small)
-                                }
-                            }
-                        }
-                        Text("这里设置的是遥控器开始传音时，遥键向当前 App 发送的快捷键。请先在对应语音工具里设成同一个键。")
-                            .font(.footnote).foregroundStyle(.secondary)
-                    }
-                    .padding(Spacing.cardPadding)
+                SettingsGroup(title: "语音工具") {
+                    VoiceRuleEditor(profile: "global")
+                        .padding(Spacing.cardPadding)
                 }
 
                 linkSelfCheckGroup
@@ -205,7 +120,6 @@ struct VoicePage: View {
                 }
             }
         }
-        .sheet(isPresented: $showAddApp) { AddRunningAppSheet() }
         .onAppear {
             refreshLinkCheck()
             checkTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { _ in
@@ -245,7 +159,7 @@ struct VoicePage: View {
             RowDivider()
             if usesStandaloneVoiceApp {
                 checkRow(light: .ok,
-                         title: "独立语音 App 模式（兼容网易叭哥说）",
+                         title: "独立语音 App 模式（不切换输入法）",
                          fix: "")
             } else {
                 checkRow(light: imeIsDoubao ? .ok : .bad,
@@ -292,14 +206,14 @@ struct VoicePage: View {
     }
 
     private var standaloneVoiceGuideGroup: some View {
-        SettingsGroup(title: "网易叭哥说／独立语音 App 设置") {
+        SettingsGroup(title: "独立语音 App 设置") {
             VStack(alignment: .leading, spacing: 8) {
                 Text("1. 在语音 App 中把触发按键和触发方式设成与上方一致。")
                 Text(model.voiceRoutingMode == .manual
                      ? "2. 把语音 App 的麦克风固定选择为 **BlackHole 2ch**。"
                      : "2. 麦克风保持“系统默认”；遥键会在说话时临时切到 **BlackHole 2ch**。")
                 Text("3. 回到这里触发一次语音，电平表跳动且文字写入目标 App 即表示链路正常。")
-                Text("网易叭哥说使用独立 App 模式，不需要切换到豆包输入法。")
+                Text("独立语音 App 不需要切换输入法；快捷键和麦克风需与所选配置一致。")
                     .font(.footnote).foregroundStyle(.secondary)
             }
             .font(.caption)
@@ -363,30 +277,8 @@ struct VoicePage: View {
             .stroke(Color(nsColor: .separatorColor), lineWidth: 1))
     }
 
-    private var triggerKeyBinding: Binding<String> {
-        Binding(get: { model.voiceRule(for: selectedProfile).keyName }, set: { value in
-            model.updateVoiceRule(for: selectedProfile) { $0.keyName = value }
-        })
-    }
-
-    private var triggerModeBinding: Binding<String> {
-        Binding(get: { model.voiceRule(for: selectedProfile).mode }, set: { value in
-            model.updateVoiceRule(for: selectedProfile) { $0.mode = value }
-        })
-    }
-
     private var usesStandaloneVoiceApp: Bool {
-        model.voiceRule(for: selectedProfile).imeBundlePrefix == nil
-    }
-
-    private var imeModeBinding: Binding<String> {
-        Binding(get: {
-            model.voiceRule(for: selectedProfile).imeBundlePrefix == nil ? "standalone" : "doubao"
-        }, set: { value in
-            model.updateVoiceRule(for: selectedProfile) {
-                $0.imeBundlePrefix = value == "standalone" ? nil : "com.bytedance.inputmethod"
-            }
-        })
+        model.voiceRule(for: "global").imeBundlePrefix == nil
     }
 
     private var routingHelpText: String {

@@ -12,13 +12,14 @@ struct ProfilePage: View {
     @State private var hoveredProfile: String?
 
     private var overlayProfiles: [String] {
-        model.config.profiles.keys.filter { $0 != "global" }.sorted()
+        Set(model.config.profiles.keys).union(model.config.voiceProfiles?.keys.map { $0 } ?? [])
+            .filter { $0 != "global" }.sorted()
     }
 
     var body: some View {
         SettingsPageLayout {
             PageHeader(title: "场景配置",
-                       subtitle: "按前台 App 自动切换按键映射。未单独配置的键继承全局默认。")
+                       subtitle: "按前台 App 自动切换按键和语音设置，未单独配置的项目继承全局。")
         } content: {
             VStack(alignment: .leading, spacing: Spacing.section) {
                 SettingsGroup(title: "全局") {
@@ -61,14 +62,30 @@ struct ProfilePage: View {
         .sheet(isPresented: $showAddApp) { AddRunningAppSheet() }
         .sheet(isPresented: $showPresets) { PresetLibrarySheet() }
         .sheet(item: $detailProfile) { selected in
-            MappingDetailView(config: model.config, profile: selected.id,
-                              onEdit: {
-                                  detailProfile = nil
-                                  model.currentProfile = selected.id
-                                  selection = .mapping
-                              },
-                              onClose: { detailProfile = nil })
-                .frame(width: 900, height: 610)
+            TabView {
+                MappingDetailView(config: model.config, profile: selected.id,
+                                  onEdit: {
+                                      detailProfile = nil
+                                      model.currentProfile = selected.id
+                                      selection = .mapping
+                                  },
+                                  onClose: { detailProfile = nil })
+                    .tabItem { Text("按键映射") }
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text(profileDisplayName(selected.id)).font(.title2.bold())
+                        Spacer()
+                        Button("完成") { detailProfile = nil }
+                    }
+                    ScrollView {
+                        VoiceRuleEditor(profile: selected.id)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                .padding(24)
+                .tabItem { Text("语音设置") }
+            }
+            .frame(width: 900, height: 650)
         }
     }
 
@@ -102,7 +119,8 @@ struct ProfilePage: View {
             appIcon(bundle)
             VStack(alignment: .leading, spacing: 1) {
                 Text(profileDisplayName(bundle)).font(.body)
-                Text(overrides.isEmpty ? "全部继承全局" : "已覆盖 \(overrides.count) 个键 · 其余继承全局")
+                Text((overrides.isEmpty ? "按键继承全局" : "已覆盖 \(overrides.count) 个键")
+                     + (model.hasCustomVoiceRule(for: bundle) ? " · 独立语音设置" : " · 语音继承全局"))
                     .font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
@@ -134,6 +152,7 @@ struct ProfilePage: View {
 
     private func removeProfile(_ bundle: String) {
         model.config.profiles.removeValue(forKey: bundle)
+        model.config.voiceProfiles?.removeValue(forKey: bundle)
         if model.currentProfile == bundle { model.currentProfile = "global" }
         model.saveConfig()
     }

@@ -201,6 +201,8 @@ struct KeyBinding: Codable {
 /// 遥控器开始传音频时，要向当前 App 发送的语音工具快捷键。
 /// App 未单独配置时继承 `voiceProfiles["global"]`。
 struct VoiceTriggerRule: Codable, Equatable {
+    /// 仅记录用户主动选择的工具预设；旧配置保持自定义，不猜测工具。
+    var presetID: String? = nil
     var keyName: String = "right_option"
     var mode: String = "hold"
     /// nil 表示独立语音 App（不切输入法）；豆包输入法使用其 bundle id 前缀。

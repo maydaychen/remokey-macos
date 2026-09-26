@@ -56,6 +56,10 @@ are two independent channels — perfect for a Mac to fully take over.
 - **Zero dependencies** — all native frameworks (CoreBluetooth / IOKit / CoreGraphics /
   AVFoundation / SwiftUI); no third-party packages.
 
+Choose a global voice-tool preset on the Voice page to save its trigger key, trigger mode, and input-method behavior. Bageshuo and Typeless use `Fn + tap`; the Doubao preset uses right Option in hold mode. Match these settings in the voice tool. Advanced settings remain editable. Per-app exceptions live under Profiles → app → Voice settings, with an option to restore global inheritance. Existing configurations retain their values and appear as custom until a preset is selected.
+
+The Typeless preset follows its [official Dictate guide](https://www.typeless.com/help/quickstart/dictate). The Bageshuo preset uses this project's existing compatible configuration. Applying a preset does not modify third-party tool settings.
+
 ## Supported apps and tools
 
 “Built-in preset” means RemoKey ships ready-to-use bindings for that app. “Generic integration” means RemoKey provides the control or audio path, while you choose a shortcut or microphone in the target app. Other top-level macOS apps can be added from the running-app list and mapped manually.
