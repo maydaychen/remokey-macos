@@ -1213,7 +1213,7 @@ enum SelfTest {
             }
             expect(combo == nil, "工作/层预设零同按：无手势、TV hold 让位轮盘", combo ?? "")
         }
-
+        applicationPickerSelfCheck(expect: expect)
         // CZ-1. Settings 新增覆盖项向后兼容：旧 JSON（无新字段）照常解码为 nil/默认。
         do {
             let old = #"{"holdMs":350,"doubleMs":250}"#

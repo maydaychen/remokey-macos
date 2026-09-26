@@ -139,7 +139,7 @@ struct VoicePage: View {
                                     .frame(maxWidth: .infinity, alignment: .leading)
                                 Picker("", selection: imeModeBinding) {
                                     Text("豆包输入法（自动切换）").tag("doubao")
-                                    Text("独立语音 App（不切输入法）").tag("standalone")
+                                    Text("网易叭哥说／独立语音 App").tag("standalone")
                                 }
                                 .labelsHidden()
                                 .frame(width: 250, alignment: .leading)
@@ -168,7 +168,7 @@ struct VoicePage: View {
 
                 linkSelfCheckGroup
 
-                doubaoGuideGroup
+                voiceToolGuideGroup
 
                 SettingsGroup(title: "BlackHole 虚拟声卡") {
                     SettingsRow(icon: blackHoleInstalled ? "checkmark.circle.fill" : "xmark.circle.fill",
@@ -243,9 +243,15 @@ struct VoicePage: View {
                      fix: "现在按住遥控器语音键说一句话——下方电平表跳动即通过；不跳请确认输入模式选了「遥控器麦克风」。",
                      pendingText: "待检测（按住语音键说话）")
             RowDivider()
-            checkRow(light: imeIsDoubao ? .ok : .bad,
-                     title: "当前输入法是豆包",
-                     fix: "点菜单栏输入法图标切到豆包输入法；没装豆包则先安装并在系统设置里启用它。")
+            if usesStandaloneVoiceApp {
+                checkRow(light: .ok,
+                         title: "独立语音 App 模式（兼容网易叭哥说）",
+                         fix: "")
+            } else {
+                checkRow(light: imeIsDoubao ? .ok : .bad,
+                         title: "当前输入法是豆包",
+                         fix: "点菜单栏输入法图标切到豆包输入法；没装豆包则先安装并在系统设置里启用它。")
+            }
         }
     }
 
@@ -274,7 +280,32 @@ struct VoicePage: View {
         .padding(.vertical, Spacing.rowV)
     }
 
-    // MARK: 豆包麦克风设置图文（N-16；文字版分步，图占位）
+    // MARK: 语音工具设置
+
+    @ViewBuilder
+    private var voiceToolGuideGroup: some View {
+        if usesStandaloneVoiceApp {
+            standaloneVoiceGuideGroup
+        } else {
+            doubaoGuideGroup
+        }
+    }
+
+    private var standaloneVoiceGuideGroup: some View {
+        SettingsGroup(title: "网易叭哥说／独立语音 App 设置") {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("1. 在语音 App 中把触发按键和触发方式设成与上方一致。")
+                Text(model.voiceRoutingMode == .manual
+                     ? "2. 把语音 App 的麦克风固定选择为 **BlackHole 2ch**。"
+                     : "2. 麦克风保持“系统默认”；遥键会在说话时临时切到 **BlackHole 2ch**。")
+                Text("3. 回到这里触发一次语音，电平表跳动且文字写入目标 App 即表示链路正常。")
+                Text("网易叭哥说使用独立 App 模式，不需要切换到豆包输入法。")
+                    .font(.footnote).foregroundStyle(.secondary)
+            }
+            .font(.caption)
+            .padding(Spacing.cardPadding)
+        }
+    }
 
     private var doubaoGuideGroup: some View {
             SettingsGroup(title: model.voiceRoutingMode == .automatic
@@ -342,6 +373,10 @@ struct VoicePage: View {
         Binding(get: { model.voiceRule(for: selectedProfile).mode }, set: { value in
             model.updateVoiceRule(for: selectedProfile) { $0.mode = value }
         })
+    }
+
+    private var usesStandaloneVoiceApp: Bool {
+        model.voiceRule(for: selectedProfile).imeBundlePrefix == nil
     }
 
     private var imeModeBinding: Binding<String> {

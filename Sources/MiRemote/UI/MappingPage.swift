@@ -251,6 +251,10 @@ struct MappingPage: View {
 
 func profileDisplayName(_ bundleID: String) -> String {
     if bundleID == "global" { return "全局默认（Global）" }
+    if let running = NSWorkspace.shared.runningApplications.first(where: { $0.bundleIdentifier == bundleID }),
+       let name = running.localizedName, !name.isEmpty {
+        return name
+    }
     if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
         return FileManager.default.displayName(atPath: url.path)
     }

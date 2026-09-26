@@ -210,6 +210,32 @@ private struct ProfileDetailSelection: Identifiable {
 
 // MARK: - 从运行中的 App 添加
 
+// 菜单栏型应用使用 .accessory，例如网易叭哥说。只接纳顶层 .app，避免把其
+// WebKit Networking / WebContent / GPU 等嵌套辅助进程列成可配置应用。
+func isTopLevelApplicationBundle(_ url: URL) -> Bool {
+    guard url.pathExtension.caseInsensitiveCompare("app") == .orderedSame else { return false }
+    var parent = url.deletingLastPathComponent()
+    while parent.path != "/" {
+        if parent.pathExtension.caseInsensitiveCompare("app") == .orderedSame { return false }
+        let next = parent.deletingLastPathComponent()
+        if next == parent { break }
+        parent = next
+    }
+    return true
+}
+
+func shouldListRunningApplication(
+    bundleIdentifier: String?,
+    bundleURL: URL?,
+    activationPolicy: NSApplication.ActivationPolicy,
+    ownBundleIdentifier: String?
+) -> Bool {
+    guard let bundleIdentifier, !bundleIdentifier.isEmpty,
+          bundleIdentifier != ownBundleIdentifier,
+          let bundleURL, isTopLevelApplicationBundle(bundleURL) else { return false }
+    return activationPolicy == .regular || activationPolicy == .accessory
+}
+
 @MainActor
 struct AddRunningAppSheet: View {
     @EnvironmentObject var model: AppModel
@@ -217,7 +243,13 @@ struct AddRunningAppSheet: View {
 
     private var apps: [NSRunningApplication] {
         NSWorkspace.shared.runningApplications
-            .filter { $0.activationPolicy == .regular && $0.bundleIdentifier != nil }
+            .filter {
+                shouldListRunningApplication(
+                    bundleIdentifier: $0.bundleIdentifier,
+                    bundleURL: $0.bundleURL,
+                    activationPolicy: $0.activationPolicy,
+                    ownBundleIdentifier: Bundle.main.bundleIdentifier)
+            }
             .sorted { ($0.localizedName ?? "") < ($1.localizedName ?? "") }
     }
 
