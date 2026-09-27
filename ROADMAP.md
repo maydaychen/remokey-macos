@@ -6,7 +6,7 @@
 - 已安装并加载 BlackHole 2ch 0.7.1；遥键 RemoKey 到 BlackHole、网易叭哥说识别与文本回写已完成真实遥控器语音验收。
 - 已完成首轮可行性研究及 ATVV 真实语音验收；仍需补齐全部蓝牙按键与目标控制场景的真机证据。
 - 本 fork 已接入 Harness 手动验证入口；Git Hooks 尚未安装，硬件与系统权限行为仍需真机验收。
-- 团队 `3YT2ZK3Z94` 的 Developer ID Application 证书已安装；复用现有 ASC API Key 完成 0.2.0（build 1）App／DMG 公证、票据附加和 Gatekeeper 验收，正式 ZIP／DMG 已发布至 [GitHub Release v0.2.0](https://github.com/maydaychen/remokey-macos/releases/tag/v0.2.0)，该历史版本为 Apple Silicon（arm64）；0.2.1 Universal 安装包已完成正式验收，待发布。
+- 团队 `3YT2ZK3Z94` 的 Developer ID Application 证书已安装；复用现有 ASC API Key 完成 0.2.0（build 1）App／DMG 公证、票据附加和 Gatekeeper 验收，正式 ZIP／DMG 已发布至 [GitHub Release v0.2.0](https://github.com/maydaychen/remokey-macos/releases/tag/v0.2.0)，该历史版本为 Apple Silicon（arm64）；[0.2.1 Universal 安装包](https://github.com/maydaychen/remokey-macos/releases/tag/v0.2.1) 已完成正式验收并公开发布，远程两份资产的 SHA-256 与本地一致，源码标签指向 `c1408ad`。
 
 ## 进行中
 
