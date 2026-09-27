@@ -405,6 +405,7 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
     }
 
     func atvvDisconnected(error: String?) {
+        forceEndSessionIfActive()
         log("断开连接\(error.map { ": \($0)" } ?? "")（自动重连中）")
         onConnection?(false, nil)
     }
@@ -472,6 +473,7 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
     ///（松开触发键、还原默认麦克风），防止 stop 后修饰键粘住/麦克风停在 BlackHole。
     func forceEndSessionIfActive() {
         defer { KeyLearningGate.shared.endVoice() }
+        learningVoiceSession = false
         pendingMicSwitch = false
         pendingTrigger = false
         let (active, didSwitch): (Bool, Bool) = {
@@ -483,7 +485,7 @@ final class VoiceBridgeApp: ATVVBridgeDelegate {
             return r
         }()
         if active {
-            log("服务停止：语音会话仍在进行，强制收尾")
+            log("语音链路停止：会话仍在进行，强制收尾")
             onVoiceActive?(false)
             audio.stopImmediately()
             sink.streamStopped()

@@ -154,7 +154,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         hosting.view.appearance = appearance
         p.contentViewController = hosting
         popover = p
+        NSApp.activate(ignoringOtherApps: true)
         p.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        hosting.view.window?.makeKey()
         alignPopoverBelowStatusItem(p, button: button)
     }
 

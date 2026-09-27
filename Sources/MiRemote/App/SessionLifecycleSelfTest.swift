@@ -93,6 +93,26 @@ enum SessionLifecycleSelfTest {
             app.forceEndSessionIfActive()
             check(mic.state == "input=original, restores=1", "新零帧会话中退出仍履行旧恢复责任")
         }
+        do {
+            let mic = FakeMic()
+            let activity = AudioActivityCoordinator()
+            let app = voice(mic, activity)
+            var voiceActive = false
+            app.onVoiceActive = { voiceActive = $0 }
+            app.atvvVoiceStarted()
+            app.atvvAudioFrame(Data([0x11, 0x22]), sync: nil)
+            app.atvvDisconnected(error: "test out of range")
+            check(!voiceActive && mic.state == "input=original, restores=1",
+                  "收音中断连立即清除语音状态并恢复麦克风")
+            app.atvvAudioFrame(Data([0x11, 0x22]), sync: nil)
+            check(mic.state == "input=original, restores=1", "断连后的迟到音频不重新接管麦克风")
+            app.atvvConnected(deviceName: "test remote")
+            app.atvvVoiceStarted()
+            app.atvvAudioFrame(Data([0x11, 0x22]), sync: nil)
+            check(voiceActive && mic.state.contains("input=BlackHole"), "重连后可开始新语音会话")
+            app.atvvDisconnected(error: nil)
+            check(!voiceActive && mic.state == "input=original, restores=2", "再次断连仍正常清理")
+        }
         checkMacros(check)
         return passed
     }

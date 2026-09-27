@@ -8,6 +8,7 @@ func applicationPickerSelfCheck(expect: (Bool, String, String) -> Void) {
            "未安装 App 使用内置预设名称", "")
     expect(profileFallbackName("com.example.custom") == "com.example.custom",
            "未知自定义 App 保留包名", "")
+    expect(ATVVDiscoveryRetrySelfCheck.run(), "语音发现重试与取消回归", "")
     let bageshuo = URL(fileURLWithPath: "/Applications/网易叭哥说.app")
     let helper = URL(fileURLWithPath: "/Applications/网易叭哥说.app/Contents/Frameworks/WebKit Helper.app")
     expect(shouldListRunningApplication(bundleIdentifier: "com.bageshuo",

@@ -110,6 +110,7 @@ final class ATVVBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     /// 重连退避序列（秒）：1 → 2 → 5，其后钳在 5。
     private static let backoff: [Double] = [1, 2, 5]
     private var reconnectAttempt = 0
+    private lazy var discoveryRetry = ATVVDiscoveryRetry(queue: queue)
 
     private var peripheral: CBPeripheral?
     private var txChar: CBCharacteristic?
@@ -192,7 +193,7 @@ final class ATVVBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     // MARK: - 连接策略
 
     private func attemptConnect() {
-        guard shouldRun, central.state == .poweredOn else { return }
+        guard shouldRun, central.state == .poweredOn, peripheral == nil else { return }
 
         // 首选：系统已因 HID 保持连接，直接取回已连接外设（最常见路径）。
         let connected = central.retrieveConnectedPeripherals(withServices: [serviceUUID])
@@ -204,10 +205,28 @@ final class ATVVBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
 
         // 否则扫描该 service。
         log("ATVV_SCAN_START service=\(serviceUUID.uuidString)")
-        central.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        if !central.isScanning {
+            central.scanForPeripherals(withServices: [serviceUUID], options: nil)
+        }
+        scheduleDiscoveryRetry()
+    }
+
+    // HID 可能先于 ATVV 恢复连接，此时遥控器不再广播 ATVV 服务。
+    // 持续扫描之外也重新 retrieve，避免只能重启应用才能发现系统已连接设备。
+    private func scheduleDiscoveryRetry() {
+        discoveryRetry.start { [weak self] in
+            guard let self else { return }
+            guard self.shouldRun, self.peripheral == nil,
+                  self.central.state == .poweredOn else {
+                self.discoveryRetry.stop()
+                return
+            }
+            self.attemptConnect()
+        }
     }
 
     private func connect(to p: CBPeripheral) {
+        discoveryRetry.stop()
         central.stopScan()
         // 新连接开一代，旧代闭包全部作废。
         generation += 1
@@ -255,6 +274,7 @@ final class ATVVBridge: NSObject, CBCentralManagerDelegate, CBPeripheralDelegate
     }
 
     private func teardownConnection(disconnect: Bool) {
+        discoveryRetry.stop()
         if let p = peripheral {
             // 代际隔离：摘掉旧外设的 delegate，杜绝跨代的 peripheral 级回调回流。
             p.delegate = nil
