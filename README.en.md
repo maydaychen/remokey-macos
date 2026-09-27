@@ -205,6 +205,8 @@ accepts this limitation.
 
 ## Install (distribution build)
 
+Requires macOS 14 or later. Starting with 0.2.1, distribution packages are Universal binaries containing both Apple Silicon (arm64) and Intel (x86_64) code.
+
 If someone hands you a `.dmg` or `.zip`:
 
 1. Open the DMG and drag `RemoKey.app` into Applications; or unzip and drag it in.

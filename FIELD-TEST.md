@@ -53,6 +53,12 @@
 
   `UserKeyMapping` 必须为空，真实键盘必须完全正常。
 
+## 6. Universal 双架构验收
+
+- 在 Apple Silicon 与 Intel Mac 上分别安装同一份正式包，记录 macOS 版本和芯片型号。
+- 确认正常启动、三项权限、HID 按键、ATVV 收音、BlackHole 路由、断连重连及退出清理。
+- `lipo -archs` 包含 arm64 和 x86_64 只证明架构完整；Rosetta 测试不等同于 Intel 真机验收。
+
 ## 反馈时请带上
 
 - 失败步骤、按键顺序、预期与实际现象。

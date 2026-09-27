@@ -133,7 +133,7 @@ Codex CLI、Claude Code、Gemini CLI、aider、opencode 可使用通用 App 控�
 
 ## 使用要求
 
-- macOS 14 或更高版本。
+- macOS 14 或更高版本。0.2.1 起提供 Universal 通用包，包含 Apple Silicon（arm64）和 Intel（x86_64）代码。
 - 小米蓝牙遥控器 2 Pro，蓝牙名为 `MI RC` 系列。
 - 输入监控和辅助功能权限；首次启动向导会逐项检查。
 - 使用遥控器麦克风时需要 [BlackHole 2ch](https://existential.audio/blackhole/) 以及支持自定义麦克风或语音快捷键的工具。

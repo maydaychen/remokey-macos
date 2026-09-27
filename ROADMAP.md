@@ -2,13 +2,15 @@
 
 ## 当前阶段
 
-- 当前应用版本固定为 0.2.0（build 1），核心按键映射、ATVV 语音链路与 macOS GUI 已在上游实现。
+- 当前应用版本为 0.2.1（build 1），核心按键映射、ATVV 语音链路与 macOS GUI 已在上游实现。
 - 已安装并加载 BlackHole 2ch 0.7.1；遥键 RemoKey 到 BlackHole、网易叭哥说识别与文本回写已完成真实遥控器语音验收。
 - 已完成首轮可行性研究及 ATVV 真实语音验收；仍需补齐全部蓝牙按键与目标控制场景的真机证据。
 - 本 fork 已接入 Harness 手动验证入口；Git Hooks 尚未安装，硬件与系统权限行为仍需真机验收。
-- 团队 `3YT2ZK3Z94` 的 Developer ID Application 证书已安装；复用现有 ASC API Key 完成 0.2.0（build 1）App／DMG 公证、票据附加和 Gatekeeper 验收，正式 ZIP／DMG 已发布至 [GitHub Release v0.2.0](https://github.com/maydaychen/remokey-macos/releases/tag/v0.2.0)，本次为 Apple Silicon（arm64）版本。
+- 团队 `3YT2ZK3Z94` 的 Developer ID Application 证书已安装；复用现有 ASC API Key 完成 0.2.0（build 1）App／DMG 公证、票据附加和 Gatekeeper 验收，正式 ZIP／DMG 已发布至 [GitHub Release v0.2.0](https://github.com/maydaychen/remokey-macos/releases/tag/v0.2.0)，该历史版本为 Apple Silicon（arm64）；0.2.1 Universal 安装包已完成正式验收，待发布。
 
 ## 进行中
+
+- 2026-09-27 19:52 Universal 两种架构编译及 Apple Silicon 自检通过；本机无 x86_64 执行环境，Intel 原生启动、蓝牙、语音与权限仍待 `FIELD-TEST.md` 第 6 节真机验收。
 
 - 2026-09-27 11:11 菜单栏面板主动激活、ATVV 发现重试和断连会话清理已实现并安装；待按 `FIELD-TEST.md` 第 5 节验收首次单击，以及真实离开蓝牙范围后返回、说话中断连的连续恢复。自动化模拟不能替代这两项实机验收。
 
@@ -25,6 +27,7 @@
 
 ## 最近完成
 
+- 2026-09-27 19:52 0.2.1（build 1）构建改为分别编译 arm64／x86_64 后合并 Universal，增加逐架构门禁，同步中英文安装说明与实机验收清单；保留已发布的 0.2.0。
 - 2026-09-27 15:59 已推送正式打包修复并发布 GitHub Release v0.2.0；版本标签指向 `e78d309`，发布 Developer ID 签名且已公证的 ZIP／DMG。旧本地上游标签保留为 `archive/upstream-v0.2.0`，未推送该归档标签。
 - 2026-09-27 14:34 完成 0.2.0（build 1）正式签名与 ASC 公证；修复 DMG 本身未签名导致 Gatekeeper 拒绝的问题，增加 DMG 严格验签、团队及时间戳门禁；发布操作卡补充 ASC 凭据复用流程。
 - 2026-09-26 10:01 中英文 README 明确区分 App 按键预设、三款一键语音预设、自定义语音接入和通用 AI CLI 控制；明确预设可用不等于完成实际语音链路验收，superwhisper 不列为已验证适配。
@@ -44,10 +47,10 @@
 - 2026-09-22 21:19 修复辅助功能“去授权”一次点击同时弹出系统确认页和直接打开系统设置的问题：首启与升级重授权流程保留 macOS 原生授权请求，移除同次点击的重复设置页跳转。
 - 2026-09-22 18:47 按用户要求删除独立 HTML 实施报告，并同步移除 `AGENTS.md` 与当前进度中已经失效的报告入口；源码、应用功能和 Git 远程不受影响。
 - 2026-09-22 16:43 将分发策略从 `RemoKey Dev` 自签名切换为 Apple 官方链路：开发包限定团队 Apple Development，正式包限定 Developer ID Application、Hardened Runtime 与安全时间戳；新增 App／DMG 公证、stapling 和 Gatekeeper 验收脚本，GitHub tag 工作流不再发布 ad-hoc Release，并同步中英文 README、发布操作卡、设计与测试文档。
-- 2026-09-22 14:51 App 正式更名为「遥键 RemoKey」：Bundle ID 改为 `com.remokey.controller`，分发产物改为 `RemoKey.app`，固定开发证书改为 `RemoKey Dev`；新增中英文 App 名本地化并迁移旧 Bundle ID 下的 UserDefaults 偏好，配置、统计和 Claude Hook 继续复用原兼容目录。
 
 ## 最近验证
 
+- 2026-09-27 19:52 Universal 正式包两个架构均存在；包内完整自检、Harness（构建 53.39 秒、自检 4.30 秒）、脚本语法、README 静态审计通过。App 公证 `683b6be7-3a5a-4901-9e8d-4b8fba45a9ad` 和 DMG 公证 `448ad575-d0ba-4a66-9ac2-bb048f671dd6` 均 Accepted；签名、票据、Gatekeeper、ZIP 往返与 DMG 挂载全绿。Intel 执行未验证，保留既有 warning。
 - 2026-09-27 15:59 GitHub 远程版本标签读回指向 `e78d309`；Release 为公开正式版，两个资产均为 uploaded，远程 SHA-256 与本地一致。ZIP：`475a19332d0f50504734bba4d68cad2134ec69834bb941c6c5e57259b59afe0d`；DMG：`55a7c9c06621a2d901865a950d8bdc60715d564eb64646cf5c5ae55ed71385da`。
 - 2026-09-27 14:34 正式二进制完整自检通过；App 公证 `0cef389b-3a0a-4c66-976b-9826196a9161`、最终签名 DMG 公证 `038dcbcc-6b51-47e8-8d7d-0ab366ac6448` 均为 Accepted。`package-lint.sh` 全部通过，覆盖 Developer ID、团队、时间戳、Hardened Runtime、票据、Gatekeeper、ZIP 往返及 DMG 挂载。Shell 语法、diff 与完整 Harness 门禁通过（构建 24.66 秒、自检 4.22 秒），保留既有 warning。尚未替换本机运行 App，也未创建或推送版本标签、GitHub Release。
 - 2026-09-27 11:11 完整 Harness 通过（59 个维护文件、构建 26.24 秒、自检 4.28 秒），新增回归覆盖发现重试、重复启动、取消及再次启动，以及断连清理、迟到音频帧和重连后新会话。保留既有编译及规模 warning。Apple Development 签名版 0.2.0（build 1）已替换安装并启动，严格签名、安装后二进制一致性和配置 SHA-256 校验通过；设置窗口显示遥控器连接及 100% 电量。菜单栏首次单击与实际蓝牙范围恢复尚未验收。
@@ -67,4 +70,3 @@
 - 2026-09-23 00:00 Apple Development 签名开发包安装并重启后，放大截图确认右上按钮无“图标套图标”，三横线在圆形玻璃按钮内水平、垂直居中；构建与签名校验通过，保留 1 条既有 Swift 闭包捕获 warning。
 - 2026-09-22 22:55 语音页滚动复现验证确认顶部毛玻璃已消失，正文在标题栏下硬裁切；工具栏辅助功能树仅保留 1 个按钮，按钮位于窗口右上角并留有约 16 pt 实际边距，连续点击收起／展开侧边栏均成功。Harness task 对 52 个维护文件执行规模检查、权威构建和完整自检并通过，保留 1 条既有 Swift 闭包捕获 warning。
 - 2026-09-22 22:17 设置页顶部修复通过 Harness task：52 个维护文件规模检查、权威构建与完整自检全部成功；Apple Development 签名开发包安装并重启后，实际窗口截图确认按键映射页无标题气泡、半透明工具栏和重复空白带。辅助功能层级逐页读出按键映射、场景配置、语音、统计、通用五个标题，工具栏仅保留系统侧边栏按钮；760×612 最小窗口下标题与操作按钮无重叠。保留 1 条既有 Swift 闭包捕获 warning。
-- 2026-09-22 21:19 辅助功能授权跳转修复通过 Harness task：52 个维护文件规模检查、权威构建与完整自检全部成功；开发包使用团队 `3YT2ZK3Z94` 的 Apple Development 身份签名并满足 Designated Requirement。保留 1 条既有 Swift 闭包捕获 warning；未重置现有 TCC 权限，双页面实点回归待下次需要授权时确认。

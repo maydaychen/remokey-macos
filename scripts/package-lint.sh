@@ -40,6 +40,12 @@ echo "$DMG_DETAILS" | grep -q "^TeamIdentifier=${TEAM_ID}$" \
 echo "$DMG_DETAILS" | grep -q '^Timestamp=' \
     && pass "DMG 安全时间戳" || fail "DMG 缺少安全时间戳"
 
+if lipo "$APP/Contents/MacOS/miremote" -verify_arch arm64 2>/dev/null \
+    && lipo "$APP/Contents/MacOS/miremote" -verify_arch x86_64 2>/dev/null; then
+    pass "Universal 架构 arm64 与 x86_64"
+else
+    fail "缺少 arm64 或 x86_64 架构"
+fi
 DETAILS="$(codesign -d --verbose=4 "$APP" 2>&1)"
 echo "$DETAILS" | grep -q '^Authority=Developer ID Application:' \
     && pass "Developer ID Application 身份" || fail "签名身份不是 Developer ID Application"

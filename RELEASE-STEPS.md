@@ -1,5 +1,7 @@
 # 遥键 RemoKey 正式发布操作卡
 
+`build.sh` 分别编译 arm64 与 x86_64 并合并 Universal 二进制；正式产物验收必须确认两个架构均存在。Intel 真机蓝牙、语音和权限行为仍需单独验收。
+
 正式站外分发只接受 Apple 官方链路：`Developer ID Application` 签名、Hardened Runtime、安全时间戳、Apple 公证与 stapling。自签名、`Apple Development` 和 ad-hoc 产物都不能上传到 GitHub Release。
 
 ## 0. 一次性准备
