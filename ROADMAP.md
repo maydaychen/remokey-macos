@@ -6,7 +6,7 @@
 - 已安装并加载 BlackHole 2ch 0.7.1；遥键 RemoKey 到 BlackHole、网易叭哥说识别与文本回写已完成真实遥控器语音验收。
 - 已完成首轮可行性研究及 ATVV 真实语音验收；仍需补齐全部蓝牙按键与目标控制场景的真机证据。
 - 本 fork 已接入 Harness 手动验证入口；Git Hooks 尚未安装，硬件与系统权限行为仍需真机验收。
-- Apple 官方签名、公证与 Gatekeeper 验收脚本已接入；本机 Apple Development 开发签名可用。正式分发仍待 Account Holder 创建并安装团队 `3YT2ZK3Z94` 的 Developer ID Application 证书，并在钥匙串保存 Notary 凭据。
+- 团队 `3YT2ZK3Z94` 的 Developer ID Application 证书已安装；复用现有 ASC API Key 完成 0.2.0（build 1）App／DMG 公证、票据附加和 Gatekeeper 验收，正式 ZIP／DMG 已生成，尚未发布 GitHub Release。
 
 ## 进行中
 
@@ -25,6 +25,7 @@
 
 ## 最近完成
 
+- 2026-09-27 14:34 完成 0.2.0（build 1）正式签名与 ASC 公证；修复 DMG 本身未签名导致 Gatekeeper 拒绝的问题，增加 DMG 严格验签、团队及时间戳门禁；发布操作卡补充 ASC 凭据复用流程。
 - 2026-09-26 10:01 中英文 README 明确区分 App 按键预设、三款一键语音预设、自定义语音接入和通用 AI CLI 控制；明确预设可用不等于完成实际语音链路验收，superwhisper 不列为已验证适配。
 - 2026-09-26 09:20 语音页改为全局工具预设，支持网易叭哥说、Typeless 和豆包，选中后保存完整触发规则及工具标识；高级设置保留自定义。按 App 语音覆盖移至场景详情，支持继承／恢复全局，兼容旧配置及仅有语音覆盖的场景。
 - 2026-09-26 09:02 应用名称查询失败时复用内置预设名称，修复 ChatGPT、VLC、Zoom 等未安装应用显示 Bundle ID 的问题；未知自定义 App 保留包名。
@@ -44,10 +45,10 @@
 - 2026-09-22 16:43 将分发策略从 `RemoKey Dev` 自签名切换为 Apple 官方链路：开发包限定团队 Apple Development，正式包限定 Developer ID Application、Hardened Runtime 与安全时间戳；新增 App／DMG 公证、stapling 和 Gatekeeper 验收脚本，GitHub tag 工作流不再发布 ad-hoc Release，并同步中英文 README、发布操作卡、设计与测试文档。
 - 2026-09-22 14:51 App 正式更名为「遥键 RemoKey」：Bundle ID 改为 `com.remokey.controller`，分发产物改为 `RemoKey.app`，固定开发证书改为 `RemoKey Dev`；新增中英文 App 名本地化并迁移旧 Bundle ID 下的 UserDefaults 偏好，配置、统计和 Claude Hook 继续复用原兼容目录。
 - 2026-09-22 13:39 更新 README 致谢：移除同型号语音项目的参考实现表述，改为明确致谢本项目 fork 的上游 `godarrenw/mi_remote_control`。
-- 2026-09-22 11:46 重构 GitHub README：首页改用小米官网的 2 Pro 真机图并标注来源，以当前 App 实拍更新按键映射、语音路由与统计界面；重新组织产品价值、最新功能、工作原理、安装、键位、隐私与常见问题，突出一秒测试音、双路由、本地统计和“退出当前 App”。
 
 ## 最近验证
 
+- 2026-09-27 14:34 正式二进制完整自检通过；App 公证 `0cef389b-3a0a-4c66-976b-9826196a9161`、最终签名 DMG 公证 `038dcbcc-6b51-47e8-8d7d-0ab366ac6448` 均为 Accepted。`package-lint.sh` 全部通过，覆盖 Developer ID、团队、时间戳、Hardened Runtime、票据、Gatekeeper、ZIP 往返及 DMG 挂载。Shell 语法、diff 与完整 Harness 门禁通过（构建 24.66 秒、自检 4.22 秒），保留既有 warning。尚未替换本机运行 App，也未创建或推送版本标签、GitHub Release。
 - 2026-09-27 11:11 完整 Harness 通过（59 个维护文件、构建 26.24 秒、自检 4.28 秒），新增回归覆盖发现重试、重复启动、取消及再次启动，以及断连清理、迟到音频帧和重连后新会话。保留既有编译及规模 warning。Apple Development 签名版 0.2.0（build 1）已替换安装并启动，严格签名、安装后二进制一致性和配置 SHA-256 校验通过；设置窗口显示遥控器连接及 100% 电量。菜单栏首次单击与实际蓝牙范围恢复尚未验收。
 - 2026-09-26 10:01 README 三款语音预设与 `VoiceToolPreset` 核对一致，中英文文档静态审计及完整 Harness 通过；本次仅修改文档，未新增第三方工具实机验收结论。
 - 2026-09-26 09:20 语音工具预设通过旧 JSON 解码、预设保存、同参数工具身份区分、全局切换保留场景覆盖和恢复继承回归；中英文 README 审计及完整 Harness 通过（构建 28.53 秒、自检 4.23 秒）。未重新安装应用或验收新界面及第三方语音工具实机触发。
@@ -67,4 +68,3 @@
 - 2026-09-22 22:17 设置页顶部修复通过 Harness task：52 个维护文件规模检查、权威构建与完整自检全部成功；Apple Development 签名开发包安装并重启后，实际窗口截图确认按键映射页无标题气泡、半透明工具栏和重复空白带。辅助功能层级逐页读出按键映射、场景配置、语音、统计、通用五个标题，工具栏仅保留系统侧边栏按钮；760×612 最小窗口下标题与操作按钮无重叠。保留 1 条既有 Swift 闭包捕获 warning。
 - 2026-09-22 21:19 辅助功能授权跳转修复通过 Harness task：52 个维护文件规模检查、权威构建与完整自检全部成功；开发包使用团队 `3YT2ZK3Z94` 的 Apple Development 身份签名并满足 Designated Requirement。保留 1 条既有 Swift 闭包捕获 warning；未重置现有 TCC 权限，双页面实点回归待下次需要授权时确认。
 - 2026-09-22 18:47 删除报告后核对仓库根目录不再存在 HTML 文件，并执行 Harness 配置校验与 task 门禁；结果见本次任务交付记录。
-- 2026-09-22 16:43 Apple 签名改造验证：脚本语法、GitHub Actions YAML 与 diff 检查通过；开发打包准确选中团队 `3YT2ZK3Z94` 的 Apple Development 身份并生成 `-development` ZIP，CI ad-hoc 路径只生成 `-unsigned` ZIP／DMG 且 DMG 校验和有效；正式打包会拒绝缺失的 Developer ID，正式 DMG 会拒绝开发签名，公证脚本会拒绝缺失的钥匙串配置。Harness task 对 52 个维护文件执行规模检查、权威构建和完整自检并通过，保留 1 条既有 Swift 闭包捕获 warning。实际 Developer ID 签名、公证、stapling 与 Gatekeeper 验收因 Account Holder 证书尚未创建而未执行。

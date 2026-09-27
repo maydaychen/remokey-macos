@@ -27,6 +27,19 @@ else
     fail "codesign 严格验签"
 fi
 
+if codesign --verify --strict "$DMG" 2>/dev/null; then
+    pass "DMG 严格验签"
+else
+    fail "DMG 缺少有效签名"
+fi
+DMG_DETAILS="$(codesign -d --verbose=4 "$DMG" 2>&1 || true)"
+echo "$DMG_DETAILS" | grep -q '^Authority=Developer ID Application:' \
+    && pass "DMG Developer ID Application 身份" || fail "DMG 签名身份错误"
+echo "$DMG_DETAILS" | grep -q "^TeamIdentifier=${TEAM_ID}$" \
+    && pass "DMG 签名团队 $TEAM_ID" || fail "DMG 签名团队错误"
+echo "$DMG_DETAILS" | grep -q '^Timestamp=' \
+    && pass "DMG 安全时间戳" || fail "DMG 缺少安全时间戳"
+
 DETAILS="$(codesign -d --verbose=4 "$APP" 2>&1)"
 echo "$DETAILS" | grep -q '^Authority=Developer ID Application:' \
     && pass "Developer ID Application 身份" || fail "签名身份不是 Developer ID Application"

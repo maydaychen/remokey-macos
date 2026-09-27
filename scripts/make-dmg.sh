@@ -76,6 +76,12 @@ hdiutil create \
     -ov \
     "$DMG" >/dev/null
 
+if [ "$ALLOW_UNSIGNED" = "0" ]; then
+    SIGNING_IDENTITY="$(echo "$SIGNATURE_DETAILS" | sed -n 's/^Authority=Developer ID Application:/Developer ID Application:/p' | head -1)"
+    codesign --force --timestamp --sign "$SIGNING_IDENTITY" "$DMG"
+    codesign --verify --strict --verbose=2 "$DMG"
+fi
+
 echo "✅ 完成: $DMG"
 if [ "$ALLOW_UNSIGNED" = "0" ]; then
     echo "➡️  下一步：NOTARY_PROFILE=<钥匙串配置名> ./scripts/notarize.sh"

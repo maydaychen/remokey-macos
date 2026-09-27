@@ -18,7 +18,11 @@
 
 如果缺少 Developer ID 证书，由 Account Holder 在 [Apple Developer Certificates](https://developer.apple.com/account/resources/certificates/add) 创建 `Developer ID Application`，并把证书及对应私钥安装到登录钥匙串。不要创建或继续使用 `RemoKey Dev` 自签名证书。
 
-### 0.2 保存公证凭据
+### 0.2 选择公证凭据
+
+已配置 ASC CLI 时，可以直接复用其 API Key。先执行 `asc notarization list --limit 1` 验证公证接口访问权限；无需另建 App 专用密码，也不改变 ASC 默认认证配置。使用此方式时，执行第 2 节的 ASC 流程。
+
+使用现有 `scripts/notarize.sh` 时，则按下面步骤保存 `notarytool` 钥匙串配置。
 
 凭据只保存到 macOS 钥匙串，不写入仓库、脚本或终端历史。任选一种方式：
 
@@ -67,7 +71,27 @@ NOTARY_PROFILE="RemoKey-Notary" ./scripts/notarize.sh
 
 任一步失败都停止发布。公证失败时先读取 `notarytool` 返回的 submission ID 和日志，不上传未通过产物。
 
+### 使用 ASC 完成公证
+
+完成 `./scripts/package.sh --distribution` 后，依次执行：
+
+```bash
+APP_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Resources/Info-app.plist)"
+asc notarization submit --file "dist/RemoKey-$APP_VERSION.zip" --wait
+# 必须确认状态为 Accepted，再附加票据。
+xcrun stapler staple dist/RemoKey.app
+xcrun stapler validate dist/RemoKey.app
+ditto -c -k --keepParent dist/RemoKey.app "dist/RemoKey-$APP_VERSION.zip"
+./scripts/make-dmg.sh
+asc notarization submit --file "dist/RemoKey-$APP_VERSION.dmg" --wait
+# DMG 同样必须为 Accepted。
+xcrun stapler staple "dist/RemoKey-$APP_VERSION.dmg"
+./scripts/package-lint.sh
+```
+
 ## 3. 创建 GitHub Release
+
+先核对版本标签是否指向本次构建的源码提交。已有同名历史标签时，不直接推送或覆盖，先处理标签冲突。
 
 只有 `./scripts/package-lint.sh` 全绿后才能执行：
 
